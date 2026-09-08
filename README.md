@@ -1,63 +1,111 @@
 # AI Lead Generation Agent
 
-An AI-assisted workflow for researching businesses that may be good candidates for website redesign or other digital services.
+A portfolio project for researching businesses that may benefit from website redesign or other digital services. The current MVP focuses on one of the hardest parts of that workflow: deciding whether a candidate URL is likely to be a business's real first-party website without overstating uncertain results.
 
-The project focuses on combining automated discovery, deterministic scoring, first-party contact enrichment, and human review so that automation helps with research without presenting uncertain results as facts.
+## Current MVP
 
-## Current Capabilities
+Implemented now:
 
-- Business candidate discovery
-- Website-presence verification
-- Contact enrichment from first-party sources
-- Candidate scoring based on multiple identity signals
-- Rejection of social networks, map pages, and directory sites as official websites
-- Human-review flow for ambiguous or uncertain results
+- Deterministic website-candidate scoring
+- Exact phone-match weighting
+- Address, business-name, title, city, state, category, and domain signals
+- Rejection of common social, map, and directory hosts
+- `WEBSITE_FOUND` and `INCONCLUSIVE` automated outcomes
+- Human-only promotion to `VERIFIED_NO_WEBSITE`
+- Ambiguity handling when top candidates are too close
+- FastAPI endpoints for verification and human confirmation
+- Pytest coverage for core guardrails
 
-## Website Verification
+## Scoring Model
 
-The verification workflow scores possible website matches using signals such as:
+The scoring approach is intentionally explainable rather than opaque. Important identity signals include:
 
-- Phone-number matches
-- Address similarity
-- Business-name similarity
-- Page-title identity
-- City and state matches
-- Category similarity
-- Domain-name similarity
+- Exact phone match: strong evidence
+- Strong address match
+- Business-name and page-title match
+- City/state agreement
+- Business category agreement
+- Domain/business-name similarity
 
-Automated checks are intentionally conservative. The system can identify a likely website or mark a result as inconclusive, while stronger negative conclusions require explicit human confirmation.
+A candidate must clear the verification threshold to be marked `WEBSITE_FOUND`. If the evidence is weak or competing candidates are too close, the result stays `INCONCLUSIVE` for human review.
 
-## Contact Enrichment
+The application never automatically concludes that a business has no website. `VERIFIED_NO_WEBSITE` requires an explicit human confirmation and reason.
 
-The enrichment workflow is designed to:
+## Project Structure
 
-- Stay on the same registrable domain
-- Inspect a limited number of relevant pages
-- Respect `robots.txt`
-- Look for first-party contact information
-- Avoid treating unrelated third-party listings as authoritative
+```text
+app/
+  main.py       FastAPI application
+  models.py     Request/result models and verification states
+  scoring.py    Deterministic identity scoring and blocked-host rules
+  verifier.py   Threshold, ambiguity, and human-review logic
+
+tests/
+  test_verifier.py
+```
+
+## Run Locally
+
+Requires Python 3.11+.
+
+```bash
+python -m venv .venv
+source .venv/bin/activate       # Linux/macOS
+# .venv\Scripts\activate        # Windows PowerShell
+
+pip install -e ".[dev]"
+pytest
+uvicorn app.main:app --reload
+```
+
+Then open `http://127.0.0.1:8000/docs` for the interactive API documentation.
+
+## Example
+
+`POST /verify`
+
+```json
+{
+  "business": {
+    "name": "Acme Repair",
+    "phone": "555-123-4567",
+    "address": "123 Main St",
+    "city": "Rolla",
+    "state": "MO",
+    "category": "Electronics Repair"
+  },
+  "candidates": [
+    {
+      "url": "https://acmerepair.com",
+      "title": "Acme Repair",
+      "phone": "555-123-4567",
+      "address": "123 Main St"
+    }
+  ]
+}
+```
+
+## Roadmap
+
+Planned next steps from the larger lead-agent design:
+
+- Brave Search API candidate retrieval
+- Business discovery adapters
+- First-party contact enrichment
+- Same-registrable-domain crawling with a strict page cap
+- `robots.txt` enforcement
+- Persistence and provenance tracking
+- Lead review queue and export
+- Optional AI-assisted research/orchestration layer
 
 ## Why I Built It
 
-This project is an experiment in building AI and automation systems that do more than generate text. It explores how software can gather evidence, apply structured rules, call external services, and route uncertain decisions to a human.
-
-## Areas Explored
-
-- AI-agent workflows
-- API integration
-- Search and data enrichment
-- Deterministic scoring
-- Human-in-the-loop design
-- Data validation
-- Automation safeguards
-- Modular software architecture
-
-## Status
-
-**Active development.**
-
-The system is being developed incrementally, with an emphasis on reliability and clear separation between verified, inferred, and inconclusive information.
+This project explores how AI/automation systems can gather evidence, apply structured rules, call external services, and route uncertain decisions to a human instead of hallucinating certainty.
 
 ## Responsible Use
 
-This project is intended for legitimate business research and outreach. Automated findings should be reviewed before contacting businesses, and outreach should follow applicable platform rules, privacy requirements, and anti-spam laws.
+This project is intended for legitimate business research. Automated findings should be reviewed before outreach, and any outreach should comply with applicable platform rules, privacy requirements, and anti-spam laws.
+
+## Status
+
+**Active development.** The repository currently contains the runnable website-verification MVP. The broader discovery/enrichment workflow is documented in the roadmap and will be added incrementally.
