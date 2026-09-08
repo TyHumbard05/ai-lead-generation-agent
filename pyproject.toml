@@ -1,11 +1,13 @@
 [project]
 name = "web-lead-agent"
-version = "0.1.0"
-description = "Lead website verification MVP with deterministic scoring and human-review safeguards"
+version = "0.2.0"
+description = "Lead discovery and website verification MVP with Brave Search, deterministic scoring, and human-review safeguards"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115",
   "uvicorn[standard]>=0.30",
+  "httpx>=0.27",
+  "pydantic-settings>=2.5",
 ]
 
 [project.optional-dependencies]
