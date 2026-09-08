@@ -5,7 +5,9 @@ WEBSITE_THRESHOLD = 70
 AMBIGUITY_WINDOW = 15
 
 
-def verify_candidates(business: BusinessIdentity, candidates: list[CandidateSite]) -> VerificationResult:
+def verify_candidates(
+    business: BusinessIdentity, candidates: list[CandidateSite]
+) -> VerificationResult:
     scored = sorted(
         (score_candidate(business, candidate) for candidate in candidates),
         key=lambda item: item.score,
@@ -52,8 +54,10 @@ def confirm_no_website(result: VerificationResult, reason: str) -> VerificationR
         raise ValueError("Human confirmation requires a reason.")
     if result.status == VerificationStatus.WEBSITE_FOUND:
         raise ValueError("Cannot mark a verified website match as no-website.")
-    return result.model_copy(update={
-        "status": VerificationStatus.VERIFIED_NO_WEBSITE,
-        "requires_human_review": False,
-        "reason": reason.strip(),
-    })
+    return result.model_copy(
+        update={
+            "status": VerificationStatus.VERIFIED_NO_WEBSITE,
+            "requires_human_review": False,
+            "reason": reason.strip(),
+        }
+    )

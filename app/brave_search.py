@@ -12,6 +12,10 @@ class BraveSearchError(RuntimeError):
     pass
 
 
+class BraveSearchConfigurationError(BraveSearchError):
+    pass
+
+
 def _norm(value: str | None) -> str:
     return re.sub(r"[^a-z0-9]", "", (value or "").lower())
 
@@ -45,31 +49,47 @@ def _host(url: str) -> str:
 
 def _candidate_from_result(business: BusinessIdentity, result: dict) -> CandidateSite | None:
     url = result.get("url")
-    if not url or is_blocked_site(url):
+    if not isinstance(url, str) or not url or is_blocked_site(url):
         return None
 
-    title = result.get("title") or None
-    snippet = result.get("description") or None
+    raw_title = result.get("title")
+    raw_snippet = result.get("description")
+    title = raw_title if isinstance(raw_title, str) and raw_title else None
+    snippet = raw_snippet if isinstance(raw_snippet, str) and raw_snippet else None
     evidence = " ".join(value for value in [title, snippet] if value)
 
-    return CandidateSite(
-        url=url,
-        title=title,
-        snippet=snippet,
-        phone=business.phone if _contains_phrase(evidence, business.phone) else None,
-        address=business.address if _contains_phrase(evidence, business.address) else None,
-        city=business.city if _contains_phrase(evidence, business.city) else None,
-        state=business.state if _contains_state(evidence, business.state) else None,
-        category=business.category if _contains_phrase(evidence, business.category) else None,
-    )
+    try:
+        return CandidateSite(
+            url=url,
+            title=title,
+            snippet=snippet,
+            phone=business.phone if _contains_phrase(evidence, business.phone) else None,
+            address=business.address if _contains_phrase(evidence, business.address) else None,
+            city=business.city if _contains_phrase(evidence, business.city) else None,
+            state=business.state if _contains_state(evidence, business.state) else None,
+            category=business.category if _contains_phrase(evidence, business.category) else None,
+        )
+    except (TypeError, ValueError):
+        return None
 
 
 def parse_brave_results(business: BusinessIdentity, payload: dict) -> list[CandidateSite]:
-    raw_results = (payload.get("web") or {}).get("results") or []
+    if not isinstance(payload, dict):
+        raise BraveSearchError("Brave Search returned an unexpected response shape.")
+    web_results = payload.get("web")
+    if web_results is not None and not isinstance(web_results, dict):
+        raise BraveSearchError("Brave Search returned an unexpected response shape.")
+    raw_results = (web_results or {}).get("results", [])
+    if raw_results is None:
+        raw_results = []
+    if not isinstance(raw_results, list):
+        raise BraveSearchError("Brave Search returned an unexpected response shape.")
     candidates: list[CandidateSite] = []
     seen_hosts: set[str] = set()
 
     for result in raw_results:
+        if not isinstance(result, dict):
+            continue
         candidate = _candidate_from_result(business, result)
         if candidate is None:
             continue
@@ -89,7 +109,7 @@ def search_business(
     client: httpx.Client | None = None,
 ) -> tuple[str, list[CandidateSite]]:
     if not settings.brave_search_api_key:
-        raise BraveSearchError("BRAVE_SEARCH_API_KEY is not configured.")
+        raise BraveSearchConfigurationError("BRAVE_SEARCH_API_KEY is not configured.")
 
     query = build_business_query(business)
     owns_client = client is None
@@ -116,4 +136,9 @@ def search_business(
         if owns_client:
             http.close()
 
-    return query, parse_brave_results(business, response.json())
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise BraveSearchError("Brave Search returned invalid JSON.") from exc
+
+    return query, parse_brave_results(business, payload)

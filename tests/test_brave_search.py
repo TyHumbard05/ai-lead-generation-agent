@@ -1,7 +1,12 @@
 import httpx
 import pytest
 
-from app.brave_search import BraveSearchError, build_business_query, parse_brave_results, search_business
+from app.brave_search import (
+    BraveSearchError,
+    build_business_query,
+    parse_brave_results,
+    search_business,
+)
 from app.config import Settings
 from app.models import BusinessIdentity
 
@@ -64,6 +69,35 @@ def test_parse_results_deduplicates_same_host():
     assert len(parse_brave_results(business(), payload)) == 1
 
 
+def test_parse_results_skips_malformed_entries_and_urls():
+    payload = {
+        "web": {
+            "results": [
+                None,
+                {"url": 42, "title": "Acme Repair"},
+                {"url": "not a url", "title": "Acme Repair"},
+                {"url": "https://bad-metadata.example", "title": 42, "description": []},
+                {"url": "https://acmerepair.com", "title": "Acme Repair"},
+            ]
+        }
+    }
+
+    candidates = parse_brave_results(business(), payload)
+
+    assert [str(candidate.url) for candidate in candidates] == [
+        "https://bad-metadata.example/",
+        "https://acmerepair.com/",
+    ]
+    assert candidates[0].title is None
+    assert candidates[0].snippet is None
+
+
+@pytest.mark.parametrize("payload", [[], {"web": {"results": {}}}])
+def test_parse_results_rejects_unexpected_response_shapes(payload):
+    with pytest.raises(BraveSearchError, match="unexpected response shape"):
+        parse_brave_results(business(), payload)
+
+
 def test_search_business_sends_brave_auth_and_clamps_count():
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.headers["X-Subscription-Token"] == "test-key"
@@ -86,3 +120,36 @@ def test_search_business_sends_brave_auth_and_clamps_count():
 def test_search_business_requires_api_key():
     with pytest.raises(BraveSearchError, match="BRAVE_SEARCH_API_KEY"):
         search_business(business(), settings=Settings(brave_search_api_key=None))
+
+
+def test_search_business_reports_invalid_json():
+    client = httpx.Client(
+        transport=httpx.MockTransport(
+            lambda request: httpx.Response(200, content=b"not-json", request=request)
+        )
+    )
+
+    with pytest.raises(BraveSearchError, match="invalid JSON"):
+        search_business(
+            business(),
+            settings=Settings(brave_search_api_key="test-key"),
+            client=client,
+        )
+
+    client.close()
+
+
+def test_search_business_wraps_http_errors():
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(429, request=request)
+
+    client = httpx.Client(transport=httpx.MockTransport(handler))
+
+    with pytest.raises(BraveSearchError, match="request failed"):
+        search_business(
+            business(),
+            settings=Settings(brave_search_api_key="test-key"),
+            client=client,
+        )
+
+    client.close()

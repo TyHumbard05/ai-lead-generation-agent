@@ -18,7 +18,10 @@ Implemented now:
 - Human-only promotion to `VERIFIED_NO_WEBSITE`
 - Ambiguity handling when top candidates are too close
 - FastAPI endpoints for direct verification and search + verification
-- Pytest coverage and GitHub Actions CI
+- Bounded batch verification for lead-review workflows
+- Strict request validation that rejects unknown or malformed fields
+- API, integration, and unit tests with a 90% CI coverage gate
+- Ruff linting and formatting checks in GitHub Actions
 
 ## How It Works
 
@@ -32,6 +35,18 @@ Implemented now:
 8. Weak or competing matches remain `INCONCLUSIVE` for human review.
 
 The application **never automatically concludes that a business has no website**. `VERIFIED_NO_WEBSITE` requires explicit human confirmation and a reason.
+
+## API
+
+| Endpoint | Purpose | External API required |
+| --- | --- | --- |
+| `GET /health` | Liveness check | No |
+| `POST /verify` | Score supplied website candidates | No |
+| `POST /verify/batch` | Verify up to 100 leads in one deterministic request | No |
+| `POST /search-and-verify` | Discover candidates with Brave, then verify them | Yes |
+| `POST /confirm-no-website` | Record a human-reviewed no-website decision | No |
+
+All request models reject unknown fields. Candidate lists are capped at 50 per lead, Brave result counts are capped at 20, and batch requests are capped at 100 uniquely identified leads.
 
 ## Scoring Model
 
@@ -58,11 +73,15 @@ app/
   verifier.py      Threshold, ambiguity, and human-review logic
 
 tests/
+  test_api.py
   test_brave_search.py
   test_verifier.py
 
+docs/
+  architecture.md  Component boundaries, decision flow, and tradeoffs
+
 .github/workflows/
-  tests.yml        Pytest CI on pushes and pull requests
+  tests.yml        Lint, format, and coverage gates on pushes and pull requests
 ```
 
 ## Run Locally
@@ -87,7 +106,9 @@ BRAVE_SEARCH_API_KEY=your_key_here
 Then run:
 
 ```bash
-pytest
+ruff check .
+ruff format --check .
+pytest --cov=app --cov-report=term-missing --cov-fail-under=90
 uvicorn app.main:app --reload
 ```
 
@@ -116,6 +137,51 @@ The response contains the generated search query, first-party candidate sites, a
 ## Direct Verification
 
 The original `POST /verify` endpoint is still available when candidate sites are already known and you want to run only the deterministic verifier.
+
+## Batch Verification Example
+
+`POST /verify/batch` accepts a client-defined ID for each lead so results can be correlated safely:
+
+```json
+{
+  "leads": [
+    {
+      "id": "crm-1042",
+      "business": {
+        "name": "Acme Repair",
+        "phone": "555-123-4567"
+      },
+      "candidates": [
+        {
+          "url": "https://acmerepair.com",
+          "title": "Acme Repair",
+          "phone": "+1 555-123-4567"
+        }
+      ]
+    }
+  ]
+}
+```
+
+The response includes per-lead evidence plus `total`, `website_found`, and `inconclusive` summary counts.
+
+## Design Principles
+
+- **Deterministic decisions:** scoring weights and thresholds are inspectable and tested.
+- **Fail safely:** malformed upstream data is skipped or reported; uncertainty never becomes a negative claim.
+- **Thin API layer:** request handling delegates search, scoring, and verification to focused modules.
+- **Testability:** environment settings are dependency-injected and external HTTP is tested with mock transports.
+- **Bounded work:** request limits prevent accidental unbounded processing.
+
+See [the architecture notes](docs/architecture.md) for component boundaries and tradeoffs.
+
+## Current Limitations
+
+- Search evidence comes from Brave result titles and snippets; the application does not crawl candidate sites yet.
+- Verification is rule-based and tuned for US-style business identity data, especially phone numbers.
+- Data is not persisted, and human confirmations are returned to the caller rather than stored in an audit log.
+- The API has no authentication or rate limiting and should not be exposed directly to the public internet.
+- A Brave Search subscription and API key are required only for `/search-and-verify`.
 
 ## Roadmap
 
