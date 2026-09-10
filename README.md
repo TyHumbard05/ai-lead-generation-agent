@@ -1,5 +1,7 @@
 # AI Lead Generation Agent
 
+![CI](https://github.com/TyHumbard05/ai-lead-generation-agent/actions/workflows/tests.yml/badge.svg)
+
 A portfolio project for researching businesses that may benefit from website redesign or other digital services. The current MVP combines **Brave Search API candidate retrieval**, deterministic website verification, and human-review safeguards so uncertain results are not presented as facts.
 
 ## Current MVP
