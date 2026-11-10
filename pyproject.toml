@@ -25,6 +25,9 @@ dev = [
 [project.urls]
 Repository = "https://github.com/TyHumbard05/ai-lead-generation-agent"
 
+[tool.setuptools]
+packages = ["app"]
+
 [tool.ruff]
 target-version = "py311"
 line-length = 100
