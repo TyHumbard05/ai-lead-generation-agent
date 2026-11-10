@@ -3,6 +3,10 @@
 This repository keeps the Agensi marketplace artifact separate from the FastAPI application. The
 source package is `agensi/business-website-lead-audit`; the generated ZIP is not committed.
 
+The final listing copy, tags, use cases, FAQ, permissions declaration, pricing recommendation, and
+media upload order are in [`agensi-listing-kit.md`](agensi-listing-kit.md). The logo and screenshots
+are in [`agensi-media/`](agensi-media/).
+
 Requirements below were checked against Agensi's current documentation on November 10, 2026:
 
 - [Package your skill](https://www.agensi.io/docs/packaging)
@@ -40,8 +44,8 @@ scoring, and mandatory human review for uncertain or no-website conclusions.
 needed only for site inspection. Python 3.11+ and terminal access are optional for deterministic
 scoring. Contact enrichment is optional and off by default.
 
-**Suggested price:** Start free for initial feedback, or use a low one-time price after the workflow
-has been tested in at least two supported agents. A paid listing requires a configured payout method.
+**Suggested price:** $5 one-time. This keeps the first release inexpensive while allowing card and
+Agensi-balance checkout. A paid listing requires a configured payout method.
 
 ### Description
 
