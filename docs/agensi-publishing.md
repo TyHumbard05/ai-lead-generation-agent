@@ -27,7 +27,7 @@ ruff format --check .
 
 The builder creates `dist/business-website-lead-audit-1.0.0.zip`. It rejects non-text files,
 symlinks, scripts over 20 KB, missing `SKILL.md`, and archives over Agensi's 5 MB agent-upload
-limit. The archive has one top-level folder whose name matches the skill's frontmatter name.
+limit. `SKILL.md`, `scripts/`, `references/`, and `templates/` sit directly at the ZIP root.
 
 ## Listing draft
 
@@ -40,9 +40,10 @@ scoring, and mandatory human review for uncertain or no-website conclusions.
 
 **Additional categories:** Research & Analysis; Workflow Automation
 
-**Compatibility note:** Requires an authorized web-search or business-search tool. Browser access is
-needed only for site inspection. Python 3.11+ and terminal access are optional for deterministic
-scoring. Contact enrichment is optional and off by default.
+**Compatibility note:** Requires one web-search, business-search, or company-discovery tool attached
+to the listing in Agensi. Browser access is needed only for site inspection. Python 3.11+ and
+terminal access are optional for deterministic scoring. Contact enrichment is optional and off by
+default. No buyer-owned Brave API account is required.
 
 **Suggested price:** $5 one-time. This keeps the first release inexpensive while allowing card and
 Agensi-balance checkout. A paid listing requires a configured payout method.
@@ -122,8 +123,9 @@ and a written reason.
 5. Upload the ZIP at <https://www.agensi.io/dashboard/submit>.
 6. Paste the listing draft, choose categories and pricing, and add a 512 x 512 square logo if desired.
 7. In the preview, verify detected permissions and declare every service the skill needs.
-8. If assigning Agensi-provided tools, choose only the search or enrichment tools actually used and
-   keep contact enrichment optional. A skill can be assigned at most 10 Agensi tools.
+8. Attach at least one search or company-discovery tool. Optionally attach one company-enrichment tool
+   and one contact provider such as Hunter, Apollo, or ContactOut. Choose only tools the workflow
+   actually uses; Agensi allows at most 10 tools per skill.
 9. Test the preview in the creator's own agent. Confirm that paid calls are quoted and approved before
    execution and that ambiguous evidence stays inconclusive.
 10. Submit for security and human review. Allow up to 48 hours and address any reported finding before

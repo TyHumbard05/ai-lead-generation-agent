@@ -24,9 +24,11 @@ from conclusions, use deterministic checks where possible, and route uncertainty
    search area, business category, maximum leads, desired output, and whether contact discovery is
    included. Use the conservative defaults in [references/configuration.md](references/configuration.md)
    when the user has no preference.
-2. Choose authorized tools. A web or business search tool is required for discovery. Company or
-   contact enrichment is optional and should be used only when requested. Never ask the user to put
-   credentials in a report or project file.
+2. Inspect the tools attached to this Agensi listing with `skill_tools`. A web or business search
+   tool is required for discovery. Company enrichment and contact discovery are optional and should
+   be used only when the user's request needs them. Follow the routing rules in
+   [references/tool-routing.md](references/tool-routing.md). Never ask the user to put credentials in
+   a report or project file.
 3. Discover candidates with at least two materially different queries per business when the first
    query is inconclusive. Include name plus location, then add phone, street, or category when known.
 4. Separate first-party candidates from third-party evidence. Preserve the result URL, title,

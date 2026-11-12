@@ -18,9 +18,10 @@ pricing after collecting usage feedback.
 
 **Additional categories:** Research & Analysis; Workflow Automation
 
-**Compatibility note:** Requires an authorized web-search or business-search tool. Browser access is
-needed only for site inspection. Python 3.11+ and terminal access are optional for deterministic
-scoring. Contact enrichment is optional and off by default.
+**Compatibility note:** Requires one web-search, business-search, or company-discovery tool attached
+to the listing in Agensi. Browser access is needed only for site inspection. Python 3.11+ and
+terminal access are optional for deterministic scoring. Contact enrichment is optional and off by
+default. No buyer-owned Brave API account is required.
 
 ## Description
 
@@ -156,6 +157,19 @@ No. Those are separate actions and require a separate user request and authoriza
 - **File writes:** used only when the user requests a saved report.
 - **Environment variables:** not required by the skill.
 - **Paid tool calls:** always quoted and explicitly approved first.
+
+## Agensi tool setup
+
+Attach only the capabilities needed by the workflow, preferably three or fewer:
+
+1. One web-search, business-search, or company-discovery tool for required candidate discovery.
+2. One company-enrichment tool for optional identity evidence.
+3. One contact provider, such as Hunter, Apollo, or ContactOut, for optional user-requested contact
+   discovery.
+
+The skill calls `skill_tools` to inspect what is attached, uses `quote_tool` to obtain the exact price,
+waits for explicit approval, and then uses `run_tool`. Do not attach several overlapping contact
+providers at launch unless testing demonstrates a clear need.
 
 ## Media upload order
 

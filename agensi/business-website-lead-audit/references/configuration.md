@@ -14,20 +14,24 @@ the final report.
 
 ## Required access
 
-- A web-search or business-search tool for discovery.
+- One web-search, business-search, or company-discovery tool attached to the listing in Agensi.
 - Browser access only when inspecting a candidate website.
 
 ## Optional access
 
 - Company enrichment for business attributes the user requested.
-- Contact discovery for public business channels when the user explicitly requested outreach-ready
-  results.
+- Hunter, Apollo, ContactOut, or another attached contact-discovery tool for public business channels
+  when the user explicitly requested outreach-ready results.
 - Python 3.11 or newer plus terminal access for the deterministic scorer. The scorer uses only the
   Python standard library, reads JSON from standard input, writes JSON to standard output, and makes
   no network calls.
 
 Use connected services for authentication. Never request that an API key, password, or token be
 written into the skill, report, repository, or command history.
+
+The marketplace skill does not require the repository's Brave Search API key or FastAPI application.
+Agensi-attached tools perform discovery and enrichment on Agensi's credentials. The optional local
+scorer performs only deterministic identity scoring.
 
 If a tool charges per call, quote the exact proposed cost and wait for explicit approval before the
 call. Approval for one quoted call or batch does not authorize later charges.

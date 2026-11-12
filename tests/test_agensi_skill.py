@@ -97,7 +97,8 @@ def test_builder_creates_expected_text_only_archive(tmp_path):
 
     with zipfile.ZipFile(output) as archive:
         names = archive.namelist()
-        assert f"{SKILL_NAME}/SKILL.md" in names
-        assert f"{SKILL_NAME}/scripts/score_candidates.py" in names
+        assert "SKILL.md" in names
+        assert "scripts/score_candidates.py" in names
+        assert all(not name.startswith(f"{SKILL_NAME}/") for name in names)
         assert all(Path(name).suffix in {".md", ".py"} for name in names)
         assert len(names) <= 100
