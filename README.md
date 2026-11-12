@@ -177,6 +177,25 @@ The response includes per-lead evidence plus `total`, `website_found`, and `inco
 
 See [the architecture notes](docs/architecture.md) for component boundaries and tradeoffs.
 
+## Agensi Skill
+
+The repository also contains a self-contained marketplace skill in
+[`agensi/business-website-lead-audit`](agensi/business-website-lead-audit). It preserves the
+application's evidence-based scoring and human-review safeguards without bundling or changing the
+FastAPI service. The skill uses the buyer's authorized search tools and includes an optional,
+standard-library-only deterministic scorer; it contains no credentials and makes no network calls
+of its own.
+
+Build the uploadable ZIP with:
+
+```bash
+python tools/build_agensi_skill.py
+```
+
+The archive is written to `dist/`, which is intentionally ignored by Git. See
+[`docs/agensi-publishing.md`](docs/agensi-publishing.md) for listing copy, prerequisites, validation,
+and submission steps.
+
 ## Current Limitations
 
 - Search evidence comes from Brave result titles and snippets; the application does not crawl candidate sites yet.
